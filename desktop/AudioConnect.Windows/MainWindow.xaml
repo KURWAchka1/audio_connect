@@ -1,0 +1,30 @@
+<Window x:Class="AudioConnect.Windows.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Title="Audio Connect" Width="680" Height="800" MinWidth="570" MinHeight="650" Background="#F4F7FA" Foreground="{StaticResource Ink}" FontFamily="Segoe UI" WindowStartupLocation="CenterScreen">
+  <Grid Margin="30,24">
+    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+    <Grid>
+      <StackPanel><TextBlock Text="Audio Connect" FontSize="28" FontWeight="SemiBold"/><TextBlock Text="Звук компьютера → телефон по USB" FontSize="14" Foreground="#607084" Margin="0,5,0,0"/></StackPanel>
+      <Border Background="#E3ECF5" CornerRadius="4" HorizontalAlignment="Right" VerticalAlignment="Top" Padding="10,5"><TextBlock Text="USB · 48 кГц" FontSize="12"/></Border>
+    </Grid>
+    <Border Grid.Row="1" Background="White" CornerRadius="10" Padding="22" Margin="0,24,0,18" BorderBrush="#DCE4ED" BorderThickness="1">
+      <StackPanel>
+        <StackPanel Orientation="Horizontal"><Ellipse x:Name="StatusDot" Width="9" Height="9" Fill="#8794A5" Margin="0,0,9,0"/><TextBlock x:Name="StatusTitle" Text="Подключите телефон" FontSize="19" FontWeight="SemiBold"/></StackPanel>
+        <TextBlock x:Name="StatusDetail" Text="Кабель должен поддерживать передачу данных." TextWrapping="Wrap" Foreground="#607084" FontSize="13" Margin="18,9,0,18" MinHeight="35"/>
+        <TextBlock Text="Телефон" FontSize="12" FontWeight="SemiBold" Margin="0,0,0,7"/>
+        <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><ComboBox x:Name="DevicePicker" AutomationProperties.Name="Телефон"/><Button x:Name="RefreshButton" Grid.Column="1" Content="Обновить" Click="Refresh_Click" Margin="10,0,0,0"/></Grid>
+        <TextBlock Text="Источник звука Windows" FontSize="12" FontWeight="SemiBold" Margin="0,17,0,7"/>
+        <ComboBox x:Name="AudioPicker" DisplayMemberPath="Label" AutomationProperties.Name="Источник звука"/>
+        <Grid Margin="0,20,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><Button x:Name="StartButton" Content="Передавать звук" Click="Start_Click" Background="#246BE0" Foreground="White" FontWeight="SemiBold"/><Button x:Name="StopButton" Grid.Column="1" Content="Остановить" Click="Stop_Click" Margin="10,0,0,0" IsEnabled="False"/></Grid>
+        <Grid Margin="0,18,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><TextBlock Text="Сигнал" FontSize="12" Foreground="#607084" VerticalAlignment="Center"/><ProgressBar x:Name="LevelMeter" Grid.Column="1" Maximum="1" Height="5" Margin="12,0" Foreground="#27A27E"/><TextBlock x:Name="FormatInfo" Grid.Column="2" Text="PCM · stereo" FontSize="11" Foreground="#607084"/></Grid>
+      </StackPanel>
+    </Border>
+    <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto"><StackPanel>
+      <TextBlock Text="Первое подключение" FontWeight="SemiBold" FontSize="15" Margin="0,0,0,12"/>
+      <TextBlock Text="1. Установите APK на телефон." FontSize="13" Margin="0,0,0,9"/>
+      <TextBlock Text="2. Включите «Для разработчиков» → «Отладка по USB»." TextWrapping="Wrap" FontSize="13" Margin="0,0,0,9"/>
+      <TextBlock Text="3. Подключите кабель и разрешите отладку на телефоне." TextWrapping="Wrap" FontSize="13" Margin="0,0,0,9"/>
+      <TextBlock Text="4. Нажмите «Передавать звук». Приложение телефона откроется." TextWrapping="Wrap" FontSize="13"/>
+      <TextBlock Text="Усиление и размер буфера настраиваются на телефоне.&#10;Звук остаётся слышен и на выбранном устройстве Windows." TextWrapping="Wrap" FontSize="12" Foreground="#607084" Margin="0,18,0,0"/>
+    </StackPanel></ScrollViewer>
+    <Grid Grid.Row="3" Margin="0,12,0,0"><TextBlock Text="v1.0.0 · локальное соединение" FontSize="11" Foreground="#607084" VerticalAlignment="Center"/><Button Content="Инструкция" Click="Help_Click" HorizontalAlignment="Right" Padding="10,6" FontSize="12"/></Grid>
+  </Grid>
+</Window>

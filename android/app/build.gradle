@@ -1,0 +1,36 @@
+plugins { id 'com.android.application' }
+
+android {
+    namespace 'io.github.kurwachka1.audioconnect'
+    compileSdk 36
+    defaultConfig {
+        applicationId 'io.github.kurwachka1.audioconnect'
+        minSdk 24
+        targetSdk 36
+        versionCode providers.gradleProperty('appVersionCode').getOrElse('1').toInteger()
+        versionName providers.gradleProperty('appVersion').getOrElse('1.0.0')
+    }
+    buildFeatures { buildConfig true }
+    signingConfigs {
+        release {
+            if (System.getenv('AC_KEYSTORE')) {
+                storeFile file(System.getenv('AC_KEYSTORE'))
+                storePassword System.getenv('AC_STORE_PASSWORD')
+                keyAlias System.getenv('AC_KEY_ALIAS') ?: 'audioconnect'
+                keyPassword System.getenv('AC_KEY_PASSWORD') ?: System.getenv('AC_STORE_PASSWORD')
+            }
+        }
+    }
+    buildTypes {
+        release {
+            signingConfig signingConfigs.release
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+    lint { abortOnError true; checkReleaseBuilds true }
+}
+
+dependencies { testImplementation 'junit:junit:4.13.2' }

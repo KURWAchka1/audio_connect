@@ -1,0 +1,16 @@
+**/bin/
+**/obj/
+**/build/
+**/.gradle/
+**/.idea/
+**/local.properties
+dist/
+.tools/
+*.jks
+*.keystore
+*.pfx
+*.p12
+*.log
+.codebase-memory/
+secrets/
+token.txt

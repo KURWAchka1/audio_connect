@@ -1,0 +1,61 @@
+name: Build signed release
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Release version (e.g. 1.0.1)
+        required: true
+        default: '1.0.1'
+      version_code:
+        description: Android versionCode, strictly greater than the previous release
+        required: true
+        default: '2'
+permissions:
+  contents: read
+jobs:
+  package:
+    runs-on: windows-latest
+    env:
+      AC_STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+      RELEASE_VERSION: ${{ inputs.version }}
+      RELEASE_VERSION_CODE: ${{ inputs.version_code }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9
+        with:
+          dotnet-version: '8.0.x'
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407
+      - name: Install build dependencies
+        shell: pwsh
+        run: |
+          sdkmanager 'platforms;android-36' 'build-tools;36.0.0' 'platform-tools'
+          if ($LASTEXITCODE -ne 0) { throw 'Android SDK installation failed' }
+          choco install innosetup --version=6.7.3 --yes --no-progress
+          if ($LASTEXITCODE -ne 0) { throw 'Inno Setup installation failed' }
+      - name: Restore signing key
+        shell: pwsh
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          $path = Join-Path $env:RUNNER_TEMP 'audioconnect-release.jks'
+          [IO.File]::WriteAllBytes($path, [Convert]::FromBase64String($env:KEYSTORE_BASE64))
+          "AC_KEYSTORE=$path" >> $env:GITHUB_ENV
+      - name: Build installable release files
+        shell: pwsh
+        run: |
+          if ($env:RELEASE_VERSION -notmatch '^\d+\.\d+\.\d+$') { throw 'Use a numeric three-part version' }
+          .\scripts\Build-Release.ps1 -Version $env:RELEASE_VERSION -VersionCode ([int]$env:RELEASE_VERSION_CODE) -AndroidSdk $env:ANDROID_HOME -Iscc 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe'
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: signed-release-${{ inputs.version }}
+          path: dist/releases/*
+          if-no-files-found: error
+      - name: Remove temporary key
+        if: always()
+        shell: pwsh
+        run: |
+          if ($env:AC_KEYSTORE -and (Test-Path -LiteralPath $env:AC_KEYSTORE)) { Remove-Item -LiteralPath $env:AC_KEYSTORE }
