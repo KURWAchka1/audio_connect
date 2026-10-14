@@ -6,6 +6,27 @@ using AudioConnect.Windows;
 using NAudio.CoreAudioApi;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
+using System.Diagnostics;
+
+if (args.Length == 2 && args[0] == "--mute-lease-hold")
+{
+    using var heldMute = new LocalOutputMuteLease();
+    File.WriteAllText(args[1], "ready");
+    await Task.Delay(Timeout.Infinite);
+    return;
+}
+
+if (args.Contains("--tone"))
+{
+    using var toneEnumerator = new MMDeviceEnumerator();
+    using MMDevice toneDevice = toneEnumerator.GetDefaultAudioEndpoint(DataFlow.Render, Role.Multimedia);
+    using var toneOutput = new WasapiOut(toneDevice, AudioClientShareMode.Shared, false, 50);
+    toneOutput.Init(new SignalGenerator(48000, 2) { Frequency = 440, Gain = 0.003, Type = SignalGeneratorType.Sin });
+    toneOutput.Play();
+    await Task.Delay(12000);
+    toneOutput.Stop();
+    return;
+}
 
 static void Check(bool value, string description)
 {
@@ -84,6 +105,79 @@ if (args.Contains("--capture"))
     output.Stop();
     Check(capture.CaptureCallbacks > 0 && maximum > 0.00001f, "WASAPI captures a low-level test tone");
     Check(packets >= 190, "media clock maintains 100 packets/sec despite Windows timer granularity");
+}
+
+if (args.Contains("--capture-muted"))
+{
+    using var mutedEnumerator = new MMDeviceEnumerator();
+    using MMDevice mutedDevice = mutedEnumerator.GetDefaultAudioEndpoint(DataFlow.Render, Role.Multimedia);
+    bool previousMute = mutedDevice.AudioEndpointVolume.Mute;
+    float previousVolume = mutedDevice.AudioEndpointVolume.MasterVolumeLevelScalar;
+    float maximum = 0;
+    try
+    {
+        mutedDevice.AudioEndpointVolume.Mute = true;
+        await using var mutedCapture = new CapturePipeline(_ => { });
+        mutedCapture.Start();
+        for (int i = 0; i < 30; i++) { await Task.Delay(100); maximum = Math.Max(maximum, mutedCapture.Peak); }
+        Check(mutedDevice.AudioEndpointVolume.Mute, "Windows output remains muted during capture");
+        Check(maximum > 0.0001f, "process loopback captures an independent test tone while Windows is muted");
+        Check(mutedDevice.AudioEndpointVolume.MasterVolumeLevelScalar == previousVolume, "master volume value stays unchanged");
+    }
+    finally { mutedDevice.AudioEndpointVolume.Mute = previousMute; }
+    Check(mutedDevice.AudioEndpointVolume.Mute == previousMute, "original Windows mute state restored");
+}
+
+if (args.Contains("--mute-lease"))
+{
+    using var muteEnumerator = new MMDeviceEnumerator();
+    var originalOutputs = new List<(MMDevice Device, bool Muted, float Volume)>();
+    foreach (MMDevice outputDevice in muteEnumerator.EnumerateAudioEndPoints(DataFlow.Render, DeviceState.Active))
+        originalOutputs.Add((outputDevice, outputDevice.AudioEndpointVolume.Mute, outputDevice.AudioEndpointVolume.MasterVolumeLevelScalar));
+    try
+    {
+        using (var lease = new LocalOutputMuteLease())
+        {
+            await Task.Delay(500);
+            Check(originalOutputs.All(item => item.Device.AudioEndpointVolume.Mute), "mute lease silences every active Windows output");
+            Check(originalOutputs.All(item => item.Device.AudioEndpointVolume.MasterVolumeLevelScalar == item.Volume), "mute lease preserves master volume values");
+            if (originalOutputs.Count > 0)
+            {
+                originalOutputs[0].Device.AudioEndpointVolume.Mute = false;
+                await Task.Delay(500);
+                Check(originalOutputs[0].Device.AudioEndpointVolume.Mute, "Windows unmute is suppressed while phone-only session owns the output");
+            }
+        }
+        Check(originalOutputs.All(item => item.Device.AudioEndpointVolume.Mute == item.Muted), "normal stop restores original mute flags");
+        if (originalOutputs.Count > 0)
+        {
+            originalOutputs[0].Device.AudioEndpointVolume.Mute = true;
+            using (var alreadyMuted = new LocalOutputMuteLease()) { }
+            Check(originalOutputs[0].Device.AudioEndpointVolume.Mute, "an output that was already muted stays muted after stop");
+            originalOutputs[0].Device.AudioEndpointVolume.Mute = originalOutputs[0].Muted;
+        }
+
+        string marker = Path.Combine(Path.GetTempPath(), "AudioConnect-crash-test-" + Guid.NewGuid().ToString("N"));
+        string host = Path.GetFullPath(Path.Combine(System.Runtime.InteropServices.RuntimeEnvironment.GetRuntimeDirectory(), "..", "..", "..", "dotnet.exe"));
+        var start = new ProcessStartInfo(host) { UseShellExecute = false, CreateNoWindow = true };
+        start.ArgumentList.Add(typeof(FixedSamples).Assembly.Location);
+        start.ArgumentList.Add("--mute-lease-hold"); start.ArgumentList.Add(marker);
+        using Process worker = Process.Start(start) ?? throw new IOException("Crash-test process did not start");
+        try
+        {
+            using var deadline = new CancellationTokenSource(15000);
+            while (!File.Exists(marker)) { if (worker.HasExited) throw new IOException("Crash-test process exited early"); await Task.Delay(50, deadline.Token); }
+            Check(originalOutputs.All(item => item.Device.AudioEndpointVolume.Mute), "crash-test process holds endpoint mute");
+            worker.Kill(); await worker.WaitForExitAsync(deadline.Token);
+            while (originalOutputs.Any(item => item.Device.AudioEndpointVolume.Mute != item.Muted)) await Task.Delay(50, deadline.Token);
+            Check(true, "independent watchdog restores Windows sound after forced process termination");
+        }
+        finally { if (!worker.HasExited) worker.Kill(); if (File.Exists(marker)) File.Delete(marker); }
+    }
+    finally
+    {
+        foreach (var item in originalOutputs) { item.Device.AudioEndpointVolume.Mute = item.Muted; item.Device.Dispose(); }
+    }
 }
 
 if (args.Contains("--android"))

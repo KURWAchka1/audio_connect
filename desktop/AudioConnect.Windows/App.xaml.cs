@@ -11,8 +11,14 @@ public partial class App : Application
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        if (e.Args.Length == 4 && e.Args[0] == "--restore-volume" && int.TryParse(e.Args[1], out int parentId))
+        {
+            VolumeRestoreWatchdog.Run(parentId, e.Args[2], e.Args[3]);
+            Shutdown(); return;
+        }
         instance = new Mutex(true, "Local\\AudioConnect.Desktop", out bool firstInstance);
         if (!firstInstance) { MessageBox.Show("Audio Connect уже запущен.", "Audio Connect"); Shutdown(); return; }
+        LocalOutputMuteLease.RecoverPreviousSessions();
         DispatcherUnhandledException += (_, args) =>
         {
             AppLog.Write(args.Exception);

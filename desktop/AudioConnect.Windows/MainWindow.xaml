@@ -11,8 +11,8 @@
         <TextBlock x:Name="StatusDetail" Text="Кабель должен поддерживать передачу данных." TextWrapping="Wrap" Foreground="#607084" FontSize="13" Margin="18,9,0,18" MinHeight="35"/>
         <TextBlock Text="Телефон" FontSize="12" FontWeight="SemiBold" Margin="0,0,0,7"/>
         <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><ComboBox x:Name="DevicePicker" AutomationProperties.Name="Телефон"/><Button x:Name="RefreshButton" Grid.Column="1" Content="Обновить" Click="Refresh_Click" Margin="10,0,0,0"/></Grid>
-        <TextBlock Text="Источник звука Windows" FontSize="12" FontWeight="SemiBold" Margin="0,17,0,7"/>
-        <ComboBox x:Name="AudioPicker" DisplayMemberPath="Label" AutomationProperties.Name="Источник звука"/>
+        <TextBlock Text="Воспроизведение" FontSize="12" FontWeight="SemiBold" Margin="0,17,0,7"/>
+        <Border Background="#F4F7FA" CornerRadius="5" Padding="12,11"><TextBlock Text="Все приложения Windows → только телефон" FontSize="14"/></Border>
         <Grid Margin="0,20,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><Button x:Name="StartButton" Content="Передавать звук" Click="Start_Click" Background="#246BE0" Foreground="White" FontWeight="SemiBold"/><Button x:Name="StopButton" Grid.Column="1" Content="Остановить" Click="Stop_Click" Margin="10,0,0,0" IsEnabled="False"/></Grid>
         <Grid Margin="0,18,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><TextBlock Text="Сигнал" FontSize="12" Foreground="#607084" VerticalAlignment="Center"/><ProgressBar x:Name="LevelMeter" Grid.Column="1" Maximum="1" Height="5" Margin="12,0" Foreground="#27A27E"/><TextBlock x:Name="FormatInfo" Grid.Column="2" Text="PCM · stereo" FontSize="11" Foreground="#607084"/></Grid>
       </StackPanel>
@@ -23,8 +23,8 @@
       <TextBlock Text="2. Включите «Для разработчиков» → «Отладка по USB»." TextWrapping="Wrap" FontSize="13" Margin="0,0,0,9"/>
       <TextBlock Text="3. Подключите кабель и разрешите отладку на телефоне." TextWrapping="Wrap" FontSize="13" Margin="0,0,0,9"/>
       <TextBlock Text="4. Нажмите «Передавать звук». Приложение телефона откроется." TextWrapping="Wrap" FontSize="13"/>
-      <TextBlock Text="Усиление и размер буфера настраиваются на телефоне.&#10;Звук остаётся слышен и на выбранном устройстве Windows." TextWrapping="Wrap" FontSize="12" Foreground="#607084" Margin="0,18,0,0"/>
+      <TextBlock Text="На время сеанса аудиовыходы ПК отключаются. Кнопка «Остановить» возвращает прежнее состояние звука Windows.&#10;Усиление и размер буфера настраиваются на телефоне." TextWrapping="Wrap" FontSize="12" Foreground="#607084" Margin="0,18,0,0"/>
     </StackPanel></ScrollViewer>
-    <Grid Grid.Row="3" Margin="0,12,0,0"><TextBlock Text="v1.0.0 · локальное соединение" FontSize="11" Foreground="#607084" VerticalAlignment="Center"/><Button Content="Инструкция" Click="Help_Click" HorizontalAlignment="Right" Padding="10,6" FontSize="12"/></Grid>
+    <Grid Grid.Row="3" Margin="0,12,0,0"><TextBlock Text="v1.1.0 · только телефон" FontSize="11" Foreground="#607084" VerticalAlignment="Center"/><Button Content="Инструкция" Click="Help_Click" HorizontalAlignment="Right" Padding="10,6" FontSize="12"/></Grid>
   </Grid>
 </Window>

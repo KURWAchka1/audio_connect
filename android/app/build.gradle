@@ -7,8 +7,8 @@ android {
         applicationId 'io.github.kurwachka1.audioconnect'
         minSdk 24
         targetSdk 36
-        versionCode providers.gradleProperty('appVersionCode').getOrElse('1').toInteger()
-        versionName providers.gradleProperty('appVersion').getOrElse('1.0.0')
+        versionCode providers.gradleProperty('appVersionCode').getOrElse('2').toInteger()
+        versionName providers.gradleProperty('appVersion').getOrElse('1.1.0')
     }
     buildFeatures { buildConfig true }
     signingConfigs {

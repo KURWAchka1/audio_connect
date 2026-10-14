@@ -9,7 +9,7 @@ namespace AudioConnect.Windows;
 /// <summary>WASAPI loopback, stereo downmix, and continuous 48 kHz packets, including silence.</summary>
 public sealed class CapturePipeline : IAsyncDisposable
 {
-    private readonly WasapiLoopbackCapture capture;
+    private readonly IWaveIn capture;
     private readonly BufferedWaveProvider buffer;
     private readonly ISampleProvider samples;
     private readonly Action<byte[]> publish;
@@ -21,10 +21,14 @@ public sealed class CapturePipeline : IAsyncDisposable
     public long CaptureCallbacks => Interlocked.Read(ref callbacks);
     public event Action<Exception>? Faulted;
 
-    public CapturePipeline(MMDevice device, Action<byte[]> publishPacket)
+    public CapturePipeline(MMDevice device, Action<byte[]> publishPacket) : this(new WasapiLoopbackCapture(device), publishPacket) { }
+
+    public CapturePipeline(Action<byte[]> publishPacket) : this(new ProcessLoopbackCapture(), publishPacket) { }
+
+    private CapturePipeline(IWaveIn sourceCapture, Action<byte[]> publishPacket)
     {
         publish = publishPacket;
-        capture = new WasapiLoopbackCapture(device);
+        capture = sourceCapture;
         buffer = new BufferedWaveProvider(capture.WaveFormat)
         {
             BufferDuration = TimeSpan.FromMilliseconds(250), DiscardOnBufferOverflow = true, ReadFully = true

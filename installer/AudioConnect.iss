@@ -1,5 +1,5 @@
 #ifndef AppVersion
-  #define AppVersion "1.0.0"
+  #define AppVersion "1.1.0"
 #endif
 #ifndef PublishDir
   #define PublishDir "..\dist\windows"
@@ -21,7 +21,7 @@ DisableProgramGroupPage=yes
 PrivilegesRequired=lowest
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
-MinVersion=10.0.17763
+MinVersion=10.0.20348
 OutputDir={#OutputDirPath}
 OutputBaseFilename=AudioConnect-Setup-{#AppVersion}-win-x64
 SetupIconFile=..\assets\app.ico

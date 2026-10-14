@@ -5,7 +5,7 @@ on:
       version:
         description: Release version (e.g. 1.0.1)
         required: true
-        default: '1.0.1'
+        default: '1.1.0'
       version_code:
         description: Android versionCode, strictly greater than the previous release
         required: true
@@ -54,7 +54,10 @@ jobs:
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: signed-release-${{ inputs.version }}
-          path: dist/releases/*
+          path: |
+            dist/releases/AudioConnect-Setup-${{ inputs.version }}-win-x64.exe
+            dist/releases/AudioConnect-${{ inputs.version }}-android.apk
+            dist/releases/SHA256SUMS.txt
           if-no-files-found: error
       - name: Remove temporary key
         if: always()

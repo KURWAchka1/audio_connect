@@ -1,6 +1,6 @@
 param(
-    [string]$Version = '1.0.0',
-    [int]$VersionCode = 1,
+    [string]$Version = '1.1.0',
+    [int]$VersionCode = 2,
     [string]$Dotnet = 'dotnet',
     [string]$AndroidSdk = $env:ANDROID_HOME,
     [string]$Iscc = 'iscc',
@@ -41,7 +41,8 @@ try {
         finally { Pop-Location }
         Copy-Item -LiteralPath 'android/app/build/outputs/apk/release/app-release.apk' -Destination (Join-Path $releases "AudioConnect-$Version-android.apk")
     }
-    $checksums = Get-ChildItem -LiteralPath $releases -File | Where-Object { $_.Extension -in '.exe','.apk' } | Sort-Object Name | ForEach-Object {
+    $currentFiles = @("AudioConnect-Setup-$Version-win-x64.exe", "AudioConnect-$Version-android.apk")
+    $checksums = Get-ChildItem -LiteralPath $releases -File | Where-Object { $_.Name -in $currentFiles } | Sort-Object Name | ForEach-Object {
         "{0}  {1}" -f (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant(), $_.Name
     }
     $checksums | Set-Content -LiteralPath (Join-Path $releases 'SHA256SUMS.txt') -Encoding utf8

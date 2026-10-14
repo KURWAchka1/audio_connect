@@ -11,3 +11,9 @@ Packets represent 10 ms of audio. Silence is transmitted continuously so disconn
 Only one client is streamed at a time. A reconnect begins with a new header and fresh queue. The token rotates when the desktop starts a new session; ADB explicitly launches the Android Activity with the new token. Audio is not encrypted beyond USB's transport. A local administrator or a process able to observe/debug the applications is outside this trust model.
 
 DSP runs only on Android: optional 120 Hz second-order Butterworth high-pass; smoothed gain up to 12 dB; stereo-linked 240-frame lookahead limiter with a monotonic peak deque, immediate attenuation and ~150 ms release. Output is bounded to −1 dBFS. No EQ bass boost, system volume change, root, or vendor protection bypass is used.
+
+## Windows 1.1.0 local output policy
+
+The wire protocol is unchanged; Android 1.0.0 remains compatible. Capture now uses the Windows process-loopback virtual endpoint, excluding Audio Connect's process tree, at stereo float32 / 48 kHz before conversion to wire PCM16. It is independent of endpoint master mute and requires Windows build 20348+ (Windows 11 / Server 2022+).
+
+A mute lease records original endpoint mute flags durably before mutation, then mutes every active render endpoint. It does not modify master volume values. A 250 ms monitor discovers newly active endpoints and reasserts mute; volume notifications also schedule reconciliation. On stop or application close the original flags are restored. A separate helper process holds a handle to the parent process and restores the journal after parent termination; on normal release it is signalled and exits. Unrestored journals are retried on next startup. Endpoints stay muted during cable reconnection until the Windows session stops. This policy covers normal shared-mode playback; exclusive streams that bypass software endpoint mute are unsupported.
