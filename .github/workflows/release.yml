@@ -36,8 +36,8 @@ jobs:
         run: |
           sdkmanager 'platforms;android-36' 'build-tools;36.0.0' 'platform-tools'
           if ($LASTEXITCODE -ne 0) { throw 'Android SDK installation failed' }
-          choco install innosetup --version=6.7.3 --yes --no-progress
-          if ($LASTEXITCODE -ne 0) { throw 'Inno Setup installation failed' }
+          $compiler = .\scripts\Install-InnoCompiler.ps1 -Destination (Join-Path $env:RUNNER_TEMP 'audio-connect-inno')
+          "AC_ISCC=$compiler" >> $env:GITHUB_ENV
       - name: Restore signing key
         shell: pwsh
         env:
@@ -50,7 +50,7 @@ jobs:
         shell: pwsh
         run: |
           if ($env:RELEASE_VERSION -notmatch '^\d+\.\d+\.\d+$') { throw 'Use a numeric three-part version' }
-          .\scripts\Build-Release.ps1 -Version $env:RELEASE_VERSION -VersionCode ([int]$env:RELEASE_VERSION_CODE) -AndroidSdk $env:ANDROID_HOME -Iscc 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe'
+          .\scripts\Build-Release.ps1 -Version $env:RELEASE_VERSION -VersionCode ([int]$env:RELEASE_VERSION_CODE) -AndroidSdk $env:ANDROID_HOME -Iscc $env:AC_ISCC
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: signed-release-${{ inputs.version }}

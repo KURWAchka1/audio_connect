@@ -133,6 +133,10 @@ public final class PlaybackService extends Service {
 
     @Override public void onDestroy() {
         stopPlayback("Передача остановлена");
+        if (worker != null) {
+            try { worker.join(300); }
+            catch (InterruptedException interrupted) { Thread.currentThread().interrupt(); }
+        }
         if (noisyRegistered) unregisterReceiver(noisyReceiver);
         if (audioManager != null) {
             if (Build.VERSION.SDK_INT >= 26 && focusRequest != null) audioManager.abandonAudioFocusRequest(focusRequest);

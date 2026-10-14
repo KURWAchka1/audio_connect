@@ -55,6 +55,7 @@ final class UsbAudioPlayer {
                 if (outputError != null) throw outputError;
             }
         } finally {
+            stopped.set(true);
             PlaybackState.connected = false;
             closeSocket();
             Thread output = outputThread;
@@ -103,7 +104,12 @@ final class UsbAudioPlayer {
             outputError = error instanceof IOException ? (IOException) error : new IOException("Ошибка аудиовыхода.", error);
             closeSocket();
         } finally {
-            if (track != null) { track.pause(); track.flush(); track.release(); }
+            if (track != null) {
+                try {
+                    if (track.getState() == AudioTrack.STATE_INITIALIZED) { track.pause(); track.flush(); }
+                } catch (IllegalStateException ignored) { /* The output device may already be gone. */ }
+                finally { track.release(); }
+            }
         }
     }
 
