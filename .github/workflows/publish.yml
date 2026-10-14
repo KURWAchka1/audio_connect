@@ -1,0 +1,41 @@
+name: Publish verified release artifact
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: Successful Build signed release workflow run ID
+        required: true
+      version:
+        description: Version of that signed-release artifact
+        required: true
+        default: '1.0.0'
+permissions:
+  actions: read
+  contents: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_RUN: ${{ inputs.run_id }}
+      RELEASE_VERSION: ${{ inputs.version }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Validate source build and download artifact
+        run: |
+          [[ "$RELEASE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || exit 1
+          [[ "$RELEASE_RUN" =~ ^[0-9]+$ ]] || exit 1
+          conclusion=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$RELEASE_RUN" --jq .conclusion)
+          [[ "$conclusion" == success ]] || exit 1
+          gh run download "$RELEASE_RUN" --repo "$GITHUB_REPOSITORY" --name "signed-release-$RELEASE_VERSION" --dir payload
+          cd payload
+          sed -i 's/\r$//' SHA256SUMS.txt
+          sha256sum --check SHA256SUMS.txt
+      - name: Publish files from the verified build
+        run: |
+          tag="v$RELEASE_VERSION"
+          if ! gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release create "$tag" --repo "$GITHUB_REPOSITORY" --verify-tag --draft --title "Audio Connect $RELEASE_VERSION" --notes 'Native Windows and Android USB audio. See README for installation and speaker-risk limits.'
+          fi
+          gh release upload "$tag" payload/*.exe payload/*.apk payload/SHA256SUMS.txt --repo "$GITHUB_REPOSITORY" --clobber
+          gh release edit "$tag" --repo "$GITHUB_REPOSITORY" --draft=false
