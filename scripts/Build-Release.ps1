@@ -28,6 +28,11 @@ try {
         Copy-Item -LiteralPath (Join-Path $adbSource $file) -Destination $adbDestination
     }
     foreach ($file in @('README.md','LICENSE','THIRD-PARTY-NOTICES.md')) { Copy-Item -LiteralPath (Join-Path $repo $file) -Destination $publish }
+    $dotnetDirectory = Split-Path -Parent (Get-Command $Dotnet -ErrorAction Stop).Source
+    $licenses = Join-Path $publish 'licenses'
+    New-Item -ItemType Directory -Force -Path $licenses | Out-Null
+    Copy-Item -LiteralPath (Join-Path $dotnetDirectory 'LICENSE.txt') -Destination (Join-Path $licenses 'DOTNET-LICENSE.txt')
+    Copy-Item -LiteralPath (Join-Path $dotnetDirectory 'ThirdPartyNotices.txt') -Destination (Join-Path $licenses 'DOTNET-THIRD-PARTY-NOTICES.txt')
     Invoke-Checked $Iscc @("/DAppVersion=$Version","/DPublishDir=$publish","/DOutputDirPath=$releases",'installer/AudioConnect.iss')
     if (!$SkipAndroid) {
         if (!$env:AC_KEYSTORE) { throw 'Set AC_KEYSTORE and signing password environment variables for an update-compatible release APK.' }
